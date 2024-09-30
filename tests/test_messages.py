@@ -3,9 +3,9 @@ from buttplug.core import (ButtplugMessage, Ok, Error, ButtplugErrorCode,
                            Test, DeviceAdded, MessageAttributes, DeviceRemoved,
                            DeviceInfo, DeviceList, VibrateCmd, SpeedSubcommand,
                            RotateCmd, RotateSubcommand, LinearCmd,
-                           LinearSubcommand)
+                           LinearSubcommand,BatteryNode,BatteryManager)
 
-
+import pytest
 class TestMessages(unittest.TestCase):
 
     def run_msg_test(self, msg_obj, msg_json):
@@ -72,3 +72,39 @@ class TestMessages(unittest.TestCase):
                                    LinearSubcommand(1, 500, 0.5)])
         json_msg = "{\"LinearCmd\": {\"DeviceIndex\": 0, \"Vectors\": [{\"Index\": 0, \"Duration\": 100, \"Position\": 1.0}, {\"Index\": 1, \"Duration\": 500, \"Position\": 0.5}], \"Id\": 1}}"
         self.run_msg_test(linear_cmd,  json_msg)
+
+    def test_battery_node_initialization(self):
+        # This test checks that if BatteryNode class is created correctly
+        # create a BatteryNode object with values 5 and 10
+        node1 = BatteryNode(5, 10)
+        # check if the value passed are same values that are being assigned to the battery node object
+        assert node1.charge_time == 5
+        assert node1.energy_stored == 10
+        assert node1.left is None
+        assert node1.right is None
+
+    def test_insert_charging_session(self):
+        manager = BatteryManager()
+
+        # check valid insertion to the i.e integers
+        manager.insert_charging_session(5, 10)
+        assert manager.root.charge_time == 5
+        assert manager.root.energy_stored == 10
+
+
+    def test_analyze_charging_efficiency(self):
+        manager = BatteryManager()
+        # Insert the charging sessions
+        insertions = [
+            (5, 10), (3, 6), (7, 12), (2, 4), (4, 8), (6, 9), (8, 11), (1, 100)
+        ]
+        for charge_time, energy_stored in insertions:
+            manager.insert_charging_session(charge_time, energy_stored)
+
+        # Call the analyze_charging_efficiency method
+        result = manager.analyze_charging_efficiency()
+
+        # Assert the type of the result
+        self.assertIsInstance(result, dict, "Result should be a dictionary")
+        self.assertEqual({"max_energy_sum":160}, result, "Result should contain 'max_energy_sum' key")
+
