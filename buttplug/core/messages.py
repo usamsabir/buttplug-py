@@ -312,3 +312,129 @@ class StopDeviceCmd(ButtplugDeviceMessage):
 
 class StopAllDevices(ButtplugMessage):
     pass
+
+
+class BatteryNode:
+    """
+    Represents a node in the Binary Search Tree (BST) for battery charging sessions.
+    Each node contains information about charge time and energy stored.
+    """
+
+    def __init__(self, charge_time: int, energy_stored: int):
+        self.charge_time = charge_time  # Time taken to charge the battery
+        self.energy_stored = energy_stored  # Amount of energy stored
+        self.left = None  # Left child node
+        self.right = None  # Right child node
+
+
+class BatteryManager:
+    """
+    Manages a BST of battery charging sessions and provides methods to insert
+    new sessions and analyze charging efficiency.
+    """
+
+    def __init__(self):
+        self.root = None  # Root node of the BST
+
+    def insert_charging_session(self, charge_time: int, energy_stored: int) -> None:
+        """
+        Inserts a new charging session into the BST.
+
+        Args:
+            charge_time (int): Time taken to charge the battery
+            energy_stored (int): Amount of energy stored
+
+        Raises:
+            ValueError: If inputs are not non-negative integers
+        """
+        # Input validation
+        if not isinstance(charge_time, int) or not isinstance(energy_stored, int):
+            raise ValueError("charge_time and energy_stored must be integers")
+
+        if charge_time < 0 or energy_stored < 0:
+            raise ValueError("charge_time and energy_stored must be non-negative")
+
+        # Insert the new session
+        self.root = self._insert(self.root, charge_time, energy_stored)
+
+    def _insert(self, node: BatteryNode, charge_time: int, energy_stored: int) -> BatteryNode:
+        """
+        Recursive helper method to insert a new node into the BST.
+
+        Args:
+            node (BatteryNode): Current node in the recursion
+            charge_time (int): Time taken to charge the battery
+            energy_stored (int): Amount of energy stored
+
+        Returns:
+            BatteryNode: The (possibly new) root of the subtree
+        """
+        if node is None:
+            return BatteryNode(charge_time, energy_stored)
+
+        if charge_time < node.charge_time:
+            node.left = self._insert(node.left, charge_time, energy_stored)
+        elif charge_time > node.charge_time:
+            node.right = self._insert(node.right, charge_time, energy_stored)
+        else:
+            # If charge_time already exists, update the energy_stored
+            node.energy_stored = energy_stored
+
+        return node
+
+    def max_energy_bst_subtree(self, root: BatteryNode) -> int:
+        """
+        Finds the maximum energy sum of a valid BST subtree.
+
+        Args:
+            root (BatteryNode): Root of the tree/subtree
+
+        Returns:
+            int: Maximum energy sum of a valid BST subtree
+        """
+
+        def dfs(node):
+            """
+            Depth-first search helper function to traverse the tree and compute values.
+
+            Returns:
+                tuple: (min_charge_time, max_charge_time, sum_energy, is_bst, max_sum)
+            """
+            if not node:
+                return float('inf'), float('-inf'), 0, True, 0
+
+            left_min, left_max, left_sum, left_is_bst, left_max_sum = dfs(node.left)
+            right_min, right_max, right_sum, right_is_bst, right_max_sum = dfs(node.right)
+
+            # Check if current subtree is a valid BST
+            is_bst = (left_is_bst and right_is_bst and
+                      left_max < node.charge_time < right_min)
+
+            # Compute sum of current subtree
+            current_sum = node.energy_stored + left_sum + right_sum
+
+            # Compute max sum considering current node and children
+            max_sum = max(current_sum if is_bst else 0, left_max_sum, right_max_sum)
+
+            return (min(node.charge_time, left_min),
+                    max(node.charge_time, right_max),
+                    current_sum,
+                    is_bst,
+                    max_sum)
+
+        _, _, _, _, max_sum = dfs(root)
+        return max_sum
+
+    def analyze_charging_efficiency(self) -> dict:
+        """
+        Analyzes the charging efficiency by finding the maximum energy sum
+        of a valid BST subtree.
+
+        Returns:
+            dict: A dictionary containing the maximum energy sum
+        """
+        if self.root is None:
+            return {"max_energy_sum": 0}
+
+        max_energy = self.max_energy_bst_subtree(self.root)
+        return {"max_energy_sum": max_energy}

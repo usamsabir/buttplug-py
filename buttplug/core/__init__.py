@@ -8,5 +8,5 @@ from .messages import (ButtplugMessage, Ok, Error, Test, Log,
                        DeviceList, DeviceRemoved, DeviceInfo, RequestLog,
                        ScanningFinished, VibrateCmd, SpeedSubcommand,
                        RotateCmd, LinearCmd, RotateSubcommand,
-                       LinearSubcommand, RequestDeviceList, StopDeviceCmd)
+                       LinearSubcommand, RequestDeviceList, StopDeviceCmd,BatteryNode, BatteryManager)
 from .enums import ButtplugErrorCode, ButtplugLogLevel
